@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class Addtodo extends StatefulWidget {
-  const Addtodo({super.key});
+  void Function(String addData) changeText;
+  Addtodo({super.key, required this.changeText});
 
   @override
   State<Addtodo> createState() => _AddtodoState();
@@ -9,7 +10,6 @@ class Addtodo extends StatefulWidget {
 
 class _AddtodoState extends State<Addtodo> {
   TextEditingController todoText = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -26,7 +26,11 @@ class _AddtodoState extends State<Addtodo> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: ElevatedButton(
-              onPressed: () => print("Button clicked"), child: Text("Submit")),
+              onPressed: () {
+                widget.changeText(todoText.text);
+                todoText.text = '';
+              },
+              child: Text("Submit")),
         )
       ],
     );
