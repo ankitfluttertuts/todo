@@ -12,7 +12,7 @@ class Mainscreen extends StatefulWidget {
 }
 
 class _MainscreenState extends State<Mainscreen> {
-  List<String> todoList = ['Learn Coding', 'Practice Coding'];
+  List<String> todoList = [];
 
   // void addData(String entry) {
   //   if (!todoList.contains(entry)) {
@@ -20,15 +20,72 @@ class _MainscreenState extends State<Mainscreen> {
   //   }
   // }
 
-  String data = 'dummy';
-
-  void changeText(String data) async {
+  void add(String data) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('items', todoList);
+
     if (!todoList.contains(data)) {
       todoList.add(data);
+      await prefs.setStringList('items', todoList);
     }
     setState(() {});
+    Navigator.pop(context);
+  }
+
+  void loadText() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    todoList = prefs.getStringList("items") ?? [];
+    print('data loaded');
+    setState(() {});
+  }
+
+  void deleteData(String text) async {
+    todoList.remove(text);
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('items', todoList);
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    loadText();
+    super.initState();
+  }
+
+  void editText(int index, String oldData, String newData) {
+    if (oldData != newData) {
+      todoList.removeAt(index);
+      todoList.insert(index, newData);
+      setState(() {});
+    }
+  }
+
+  void showingDialog(int index, String oldItem) {
+    TextEditingController formData = new TextEditingController(text: oldItem);
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Enter the Data'),
+            content: TextField(
+              controller: formData,
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    editText(index, oldItem, formData.text);
+                    Navigator.pop(context);
+                  },
+                  child: Text('Edit')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancel'))
+            ],
+          );
+        });
   }
 
   @override
@@ -60,7 +117,7 @@ class _MainscreenState extends State<Mainscreen> {
                         child: Container(
                           height: 160,
                           child: Addtodo(
-                            changeText: changeText,
+                            changeText: add,
                           ),
                         ),
                       );
@@ -82,9 +139,32 @@ class _MainscreenState extends State<Mainscreen> {
             itemCount: todoList.length,
             itemBuilder: (context, index) {
               return ListTile(
-                title: Text(todoList[index]),
-                leading: Icon(Icons.arrow_circle_right_outlined),
-              );
+                  title: Row(
+                    children: [
+                      Flexible(flex: 7, child: Text(todoList[index])),
+                      Flexible(
+                        flex: 3,
+                        child: Row(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  print('edit');
+                                  showingDialog(index, todoList[index]);
+                                  // Navigator.pop(context);
+                                },
+                                icon: Icon(Icons.edit)),
+                            IconButton(
+                                onPressed: () {
+                                  deleteData(todoList[index]);
+                                },
+                                icon: Icon(Icons.delete))
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                  // title: Text(todoList[index]),
+                  leading: Icon(Icons.arrow_circle_right_outlined));
             },
           ),
           // child: Text('$data'),
